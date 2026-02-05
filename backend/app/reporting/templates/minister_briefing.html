@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Minister Briefing - CFS Funding Recommendations</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #333; }
+        .header { border-bottom: 3px solid #0070c0; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #0070c0; margin: 0; }
+        .header p { color: #666; margin: 5px 0 0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #0070c0; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th { background: #0070c0; color: white; padding: 10px; text-align: left; }
+        td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .amount { text-align: right; font-family: monospace; }
+        .status { padding: 3px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #888; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Minister Briefing</h1>
+        <p>CFS Funding Recommendations - Generated {{ generated_at }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Funding Applications Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Application Title</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th class="amount">Requested</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>{{ app.organization_id }}</td>
+                    <td>{{ app.title }}</td>
+                    <td>{{ app.funding_type }}</td>
+                    <td><span class="status">{{ app.status }}</span></td>
+                    <td class="amount">${{ "{:,.2f}".format(app.amount_requested or 0) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>Confidential - Government of Alberta</p>
+        <p>Community and Social Services - Community Facilities and Supports</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GoA Design System overrides */
+:root {
+  --goa-color-interactive: #0070c0;
+  --goa-color-text: #333333;
+  --goa-color-text-secondary: #666666;
+  --goa-font-family: 'acumin-pro-semi-condensed', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  font-family: var(--goa-font-family);
+  color: var(--goa-color-text);
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure GoA web components render properly */
+goa-app-header,
+goa-app-footer,
+goa-button,
+goa-input,
+goa-form-item,
+goa-table,
+goa-modal,
+goa-notification,
+goa-callout,
+goa-badge,
+goa-tabs,
+goa-dropdown,
+goa-file-upload,
+goa-side-menu,
+goa-pagination,
+goa-spinner {
+  display: block;
+}
+
+/* Focus styles for WCAG 2.2 AA */
+*:focus-visible {
+  outline: 3px solid var(--goa-color-interactive);
+  outline-offset: 2px;
+}
+
+/* Skip to main content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  padding: 8px 16px;
+  background: var(--goa-color-interactive);
+  color: white;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
