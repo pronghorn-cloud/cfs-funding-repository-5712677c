@@ -2,6 +2,7 @@
 archive/
 artifacts/
 lit_review/
+knowledge_docs/lit_review/
 
 # Python
 __pycache__/
