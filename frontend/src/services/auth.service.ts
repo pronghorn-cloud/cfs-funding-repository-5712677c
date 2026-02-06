@@ -1,8 +1,14 @@
 import api from './api'
 import type { TokenResponse, UserProfile } from '@/types'
 
+const isDev = import.meta.env.DEV
+
 export const authService = {
-  async login(): Promise<void> {
+  async login(): Promise<TokenResponse | void> {
+    if (isDev) {
+      const { data } = await api.get<TokenResponse>('/auth/dev-login')
+      return data
+    }
     window.location.href = '/api/v1/auth/login'
   },
 

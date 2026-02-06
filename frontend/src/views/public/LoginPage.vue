@@ -9,6 +9,14 @@ const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
+async function handleLogin() {
+  await login()
+  if (isAuthenticated.value) {
+    const redirect = (route.query.redirect as string) || '/dashboard'
+    router.replace(redirect)
+  }
+}
+
 onMounted(() => {
   // Handle OAuth callback
   const accessToken = route.query.access_token as string
@@ -35,7 +43,7 @@ onMounted(() => {
         Access the CFS Funding Portal
       </p>
 
-      <goa-button type="primary" size="compact" @_click="login()" class="w-full">
+      <goa-button type="primary" size="compact" @_click="handleLogin()" class="w-full">
         Sign in with Alberta.ca Account
       </goa-button>
 

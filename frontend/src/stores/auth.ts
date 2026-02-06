@@ -54,8 +54,12 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('refresh_token')
   }
 
-  function login() {
-    authService.login()
+  async function login() {
+    const result = await authService.login()
+    if (result) {
+      setTokens(result.access_token, result.refresh_token)
+      await fetchProfile()
+    }
   }
 
   // Handle callback tokens from URL params

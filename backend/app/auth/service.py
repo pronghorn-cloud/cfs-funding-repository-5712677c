@@ -182,5 +182,31 @@ async def _create_tokens(
     )
 
 
+def create_dev_token(role: str = "admin") -> TokenResponse:
+    """Create a JWT for a mock dev user. Only for local development."""
+    now = datetime.now(UTC)
+    access_expires = now + timedelta(minutes=settings.jwt_access_token_expire_minutes)
+    dev_user_id = uuid.UUID("00000000-0000-0000-0000-000000000001")
+
+    access_payload = {
+        "sub": str(dev_user_id),
+        "email": "dev@alberta.ca",
+        "display_name": "Dev User",
+        "role": role,
+        "organization_id": None,
+        "exp": access_expires,
+        "iat": now,
+    }
+
+    access_token = jwt.encode(access_payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    refresh_token = str(uuid.uuid4())
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.jwt_access_token_expire_minutes * 60,
+    )
+
+
 def _hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
