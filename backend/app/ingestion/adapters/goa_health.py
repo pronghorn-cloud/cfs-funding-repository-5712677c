@@ -14,7 +14,7 @@ class GoAHealthAdapter(AbstractDataSourceAdapter):
 
     async def fetch_data(self, year: int | None = None) -> list[IngestionRecord]:
         # Placeholder for GoA Health data integration
-        await logger.ainfo("goa_health_fetch_start", year=year)
+        logger.info("goa_health_fetch_start", year=year)
         return []
 
     async def validate_connection(self) -> bool:

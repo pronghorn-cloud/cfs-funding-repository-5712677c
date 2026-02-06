@@ -13,7 +13,7 @@ class CFSInternalAdapter(AbstractDataSourceAdapter):
         return "CFS Internal"
 
     async def fetch_data(self, year: int | None = None) -> list[IngestionRecord]:
-        await logger.ainfo("cfs_internal_fetch_start", year=year)
+        logger.info("cfs_internal_fetch_start", year=year)
         return []
 
     async def validate_connection(self) -> bool:

@@ -13,7 +13,7 @@ class SCSSAdapter(AbstractDataSourceAdapter):
         return "SCSS"
 
     async def fetch_data(self, year: int | None = None) -> list[IngestionRecord]:
-        await logger.ainfo("scss_fetch_start", year=year)
+        logger.info("scss_fetch_start", year=year)
         return []
 
     async def validate_connection(self) -> bool:

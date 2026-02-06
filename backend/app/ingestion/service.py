@@ -141,7 +141,7 @@ async def trigger_ingestion(
         job.completed_at = datetime.now(UTC)
         job.error_message = str(exc)
         ingestion_jobs_total.labels(source=data_source.name, status="failed").inc()
-        await logger.aerror("ingestion_failed", source=data_source.name, error=str(exc))
+        logger.error("ingestion_failed", source=data_source.name, error=str(exc))
 
     return job
 

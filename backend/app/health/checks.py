@@ -12,7 +12,7 @@ async def check_database(db: AsyncSession) -> dict:
         await db.execute(text("SELECT 1"))
         return {"status": "healthy", "component": "database"}
     except Exception as exc:
-        await logger.awarning("health_check_failed", component="database", error=str(exc))
+        logger.warning("health_check_failed", component="database", error=str(exc))
         return {"status": "unhealthy", "component": "database", "error": str(exc)}
 
 
@@ -30,5 +30,5 @@ async def check_blob_storage() -> dict:
                 break
         return {"status": "healthy", "component": "blob_storage"}
     except Exception as exc:
-        await logger.awarning("health_check_failed", component="blob_storage", error=str(exc))
+        logger.warning("health_check_failed", component="blob_storage", error=str(exc))
         return {"status": "unhealthy", "component": "blob_storage", "error": str(exc)}

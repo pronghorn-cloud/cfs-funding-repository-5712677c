@@ -26,15 +26,15 @@ class StatsCanAdapter(AbstractDataSourceAdapter):
             async with httpx.AsyncClient(timeout=60.0) as client:
                 # This is a placeholder for actual StatsCan API integration
                 # Real implementation would query specific table PIDs
-                await logger.ainfo("statscan_fetch_start", year=year)
+                logger.info("statscan_fetch_start", year=year)
 
                 # Example: Census data tables for Alberta
                 # PID 98-10-0001-01: Population and dwelling counts
                 # Implementation would parse CSV/JSON responses
 
-                await logger.ainfo("statscan_fetch_complete", records=len(records))
+                logger.info("statscan_fetch_complete", records=len(records))
         except Exception as exc:
-            await logger.aerror("statscan_fetch_error", error=str(exc))
+            logger.error("statscan_fetch_error", error=str(exc))
             raise
 
         return records

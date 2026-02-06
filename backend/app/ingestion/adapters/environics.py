@@ -13,7 +13,7 @@ class EnvironicsAdapter(AbstractDataSourceAdapter):
         return "Environics Analytics"
 
     async def fetch_data(self, year: int | None = None) -> list[IngestionRecord]:
-        await logger.ainfo("environics_fetch_start", year=year)
+        logger.info("environics_fetch_start", year=year)
         return []
 
     async def validate_connection(self) -> bool:

@@ -26,11 +26,14 @@ settings = get_settings()
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: startup and shutdown."""
     setup_logging()
-    await logger.ainfo("app_starting", environment=settings.environment)
+    logger.info("app_starting", environment=settings.environment)
 
     # Initialize database (dev only - use alembic migrations in prod)
     if settings.environment == "development":
-        await init_db()
+        try:
+            await init_db()
+        except Exception as exc:
+            logger.warning("db_init_skipped", error=str(exc))
 
     app_info.info({
         "version": settings.app_version,
@@ -39,7 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
-    await logger.ainfo("app_shutting_down")
+    logger.info("app_shutting_down")
     await close_db()
 
 

@@ -17,10 +17,10 @@ async def send_email(
     """Send an email notification."""
     try:
         await email_circuit_breaker.call(_send_via_acs, to_email, subject, html_body)
-        await logger.ainfo("email_sent", to=to_email, subject=subject)
+        logger.info("email_sent", to=to_email, subject=subject)
         return True
     except Exception as exc:
-        await logger.aerror("email_send_failed", to=to_email, error=str(exc))
+        logger.error("email_send_failed", to=to_email, error=str(exc))
         return False
 
 
@@ -48,4 +48,4 @@ async def _send_via_acs(to_email: str, subject: str, html_body: str) -> None:
     """Send email via Azure Communication Services."""
     # Placeholder for ACS email integration
     # from azure.communication.email import EmailClient
-    await logger.ainfo("acs_email_placeholder", to=to_email, subject=subject)
+    logger.info("acs_email_placeholder", to=to_email, subject=subject)

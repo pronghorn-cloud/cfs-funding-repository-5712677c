@@ -13,7 +13,7 @@ class RecoveryAlbertaAdapter(AbstractDataSourceAdapter):
         return "Recovery Alberta"
 
     async def fetch_data(self, year: int | None = None) -> list[IngestionRecord]:
-        await logger.ainfo("recovery_alberta_fetch_start", year=year)
+        logger.info("recovery_alberta_fetch_start", year=year)
         return []
 
     async def validate_connection(self) -> bool:

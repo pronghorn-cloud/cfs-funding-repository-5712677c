@@ -17,10 +17,10 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 @router.post("", response_model=DocumentUploadResponse, status_code=201)
 async def upload_document(
+    user: CurrentUser,
     application_id: uuid.UUID = Form(...),
     category: str | None = Form(None),
     file: UploadFile = File(...),
-    user: CurrentUser = Depends(),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentUploadResponse:
     if file.content_type not in service.ALLOWED_CONTENT_TYPES:
@@ -45,7 +45,7 @@ async def upload_document(
 @router.get("/{doc_id}")
 async def download_document(
     doc_id: uuid.UUID,
-    user: CurrentUser = Depends(),
+    user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     doc, data = await service.download_document(doc_id, db)
@@ -59,7 +59,7 @@ async def download_document(
 @router.delete("/{doc_id}", status_code=204)
 async def delete_document(
     doc_id: uuid.UUID,
-    user: CurrentUser = Depends(),
+    user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ) -> None:
     await service.delete_document(doc_id, db)
@@ -68,7 +68,7 @@ async def delete_document(
 @router.get("/application/{application_id}", response_model=list[DocumentResponse])
 async def list_documents(
     application_id: uuid.UUID,
-    user: CurrentUser = Depends(),
+    user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ) -> list[DocumentResponse]:
     docs = await service.list_documents(application_id, db)

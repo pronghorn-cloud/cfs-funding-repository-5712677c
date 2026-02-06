@@ -46,5 +46,10 @@ htmlcov/
 .coverage
 test.db
 
+# Claude Code
+.claude/
+
 # Misc
 *.log
+*.zip
+nul

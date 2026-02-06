@@ -11,7 +11,7 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
-    "@abgov/web-components": "^4.0.0",
+    "@abgov/web-components": "^1.40.0",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "axios": "^1.7.0",
     "chart.js": "^4.4.0",

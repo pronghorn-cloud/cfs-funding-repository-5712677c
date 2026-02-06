@@ -13,7 +13,7 @@ class JusticeAdapter(AbstractDataSourceAdapter):
         return "Justice"
 
     async def fetch_data(self, year: int | None = None) -> list[IngestionRecord]:
-        await logger.ainfo("justice_fetch_start", year=year)
+        logger.info("justice_fetch_start", year=year)
         return []
 
     async def validate_connection(self) -> bool:

@@ -89,7 +89,7 @@ async def delete_document(doc_id: uuid.UUID, db: AsyncSession) -> None:
     try:
         await blob_circuit_breaker.call(_delete_from_blob, doc.blob_path)
     except Exception:
-        await logger.awarning("blob_delete_failed", blob_path=doc.blob_path)
+        logger.warning("blob_delete_failed", blob_path=doc.blob_path)
 
 
 async def list_documents(application_id: uuid.UUID, db: AsyncSession) -> list[Document]:

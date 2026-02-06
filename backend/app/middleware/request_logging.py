@@ -31,7 +31,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
         # Skip health check logging to reduce noise
         if not path.startswith("/health"):
-            await logger.ainfo(
+            logger.info(
                 "request_completed",
                 method=method,
                 path=path,
