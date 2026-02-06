@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import ORJSONResponse, RedirectResponse
 from prometheus_client import make_asgi_app
 
 from app.common.logging_config import setup_logging
@@ -77,6 +77,11 @@ def create_app() -> FastAPI:
     # Prometheus metrics endpoint
     metrics_app = make_asgi_app()
     app.mount("/metrics", metrics_app)
+
+    # Root redirect to API docs
+    @app.get("/", include_in_schema=False)
+    async def root() -> RedirectResponse:
+        return RedirectResponse(url="/api/docs")
 
     # Register routers
     _register_routers(app)
