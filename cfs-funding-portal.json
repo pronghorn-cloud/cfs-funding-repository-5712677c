@@ -1,0 +1,297 @@
+{
+  "application": {
+    "name": "CFS Funding Portal",
+    "version": "0.1.0",
+    "description": "Community Facilities and Supports - Shelter Funding Applications with integrated Social Vulnerability Index",
+    "repository": "https://github.com/pronghorn-cloud/cfs-funding-repository-5712677c.git"
+  },
+  "tech_stack": {
+    "backend": {
+      "language": "Python 3.12",
+      "framework": "FastAPI",
+      "orm": "SQLAlchemy 2.0 (async)",
+      "database_driver": "asyncpg",
+      "database": "PostgreSQL",
+      "migrations": "Alembic",
+      "auth": "Azure AD (MSAL) + application-issued JWTs",
+      "storage": "Azure Blob Storage",
+      "logging": "structlog (JSON)",
+      "monitoring": "Prometheus metrics",
+      "pdf_generation": "Jinja2 + WeasyPrint",
+      "serialization": "orjson"
+    },
+    "frontend": {
+      "language": "TypeScript",
+      "framework": "Vue 3",
+      "build_tool": "Vite 6",
+      "state_management": "Pinia",
+      "routing": "Vue Router 4",
+      "design_system": "@abgov/web-components (GoA Design System)",
+      "css": "Tailwind CSS 3",
+      "maps": "Leaflet (@vue-leaflet/vue-leaflet)",
+      "charts": "Chart.js (vue-chartjs)",
+      "http_client": "Axios"
+    }
+  },
+  "backend": {
+    "entry_point": "app.main:app",
+    "modules": [
+      {
+        "name": "auth",
+        "description": "Azure AD MSAL authentication, JWT management, role-based access control",
+        "models": ["User", "UserSession"],
+        "roles": ["applicant", "reviewer", "admin"]
+      },
+      {
+        "name": "organizations",
+        "description": "CRUD for shelter organizations with soft delete and pagination",
+        "models": ["Organization"]
+      },
+      {
+        "name": "applications",
+        "description": "Funding application lifecycle: create, edit sections, submit, review, decide",
+        "models": ["FundingApplication", "ApplicationSection", "ApplicationStatusHistory", "ApplicationComment"],
+        "statuses": ["draft", "submitted", "under_review", "reviewed", "recommended", "approved", "denied", "withdrawn"]
+      },
+      {
+        "name": "documents",
+        "description": "File upload/download via Azure Blob Storage",
+        "models": ["Document"]
+      },
+      {
+        "name": "reviews",
+        "description": "Reviewer scoring with weighted criteria and overall score calculation",
+        "models": ["Review", "ReviewScore"]
+      },
+      {
+        "name": "vulnerability",
+        "description": "Social Vulnerability Index scoring engine, heatmap data, region comparison",
+        "models": ["IndicatorCategory", "Indicator", "DataSource", "IndicatorValue", "SVIScore"],
+        "scoring": {
+          "normalization_methods": ["min_max", "z_score", "percentile"],
+          "categories": 6,
+          "indicators": 48,
+          "grading_scale": {
+            "A": "0-20 (lowest vulnerability)",
+            "B": "20-40",
+            "C": "40-60",
+            "D": "60-80",
+            "E": "80-100 (highest vulnerability)"
+          },
+          "risk_index_formula": "0.4 * VI + 0.2 * Resources + 0.2 * Pressure + 0.2 * Funding"
+        }
+      },
+      {
+        "name": "ingestion",
+        "description": "Data source ingestion pipeline with abstract adapter pattern",
+        "models": ["IngestionJob"],
+        "adapters": ["statscan", "goa_health", "environics", "cfs_internal", "scss", "recovery_alberta", "justice"]
+      },
+      {
+        "name": "geography",
+        "description": "Alberta regions and municipalities with GeoJSON boundaries",
+        "models": ["Region", "Municipality"]
+      },
+      {
+        "name": "reporting",
+        "description": "Briefing package generation (PDF via Jinja2 + WeasyPrint)",
+        "templates": ["minister_briefing.html", "treasury_board.html"]
+      },
+      {
+        "name": "notifications",
+        "description": "Email service via Azure Communication Services (placeholder)"
+      },
+      {
+        "name": "health",
+        "description": "Kubernetes health probes: liveness, readiness, startup"
+      }
+    ],
+    "middleware": [
+      {"name": "CorrelationIdMiddleware", "description": "Adds X-Correlation-ID to all requests/responses"},
+      {"name": "RequestLoggingMiddleware", "description": "Structured JSON logging of all requests"},
+      {"name": "RateLimitingMiddleware", "description": "In-memory rate limiting per client IP"}
+    ],
+    "api_endpoints": [
+      {"method": "GET", "path": "/", "name": "root", "description": "Redirect to API docs", "auth": false},
+      {"method": "GET", "path": "/health/live", "name": "liveness", "description": "Liveness probe", "auth": false},
+      {"method": "GET", "path": "/health/ready", "name": "readiness", "description": "Readiness probe (checks DB, blob)", "auth": false},
+      {"method": "GET", "path": "/health/startup", "name": "startup", "description": "Startup probe", "auth": false},
+      {"method": "GET", "path": "/api/docs", "name": "swagger_ui", "description": "Swagger UI documentation", "auth": false},
+      {"method": "GET", "path": "/metrics", "name": "prometheus", "description": "Prometheus metrics endpoint", "auth": false},
+      {"method": "GET", "path": "/api/v1/auth/login", "name": "login", "description": "Initiate Azure AD login (redirects to dev-login in debug mode)", "auth": false},
+      {"method": "GET", "path": "/api/v1/auth/dev-login", "name": "dev_login", "description": "Dev-only: issue JWTs for mock user", "auth": false},
+      {"method": "GET", "path": "/api/v1/auth/callback", "name": "callback", "description": "Handle Azure AD OAuth callback", "auth": false},
+      {"method": "POST", "path": "/api/v1/auth/refresh", "name": "refresh", "description": "Refresh access token", "auth": false},
+      {"method": "POST", "path": "/api/v1/auth/logout", "name": "logout", "description": "Revoke refresh token", "auth": false},
+      {"method": "GET", "path": "/api/v1/auth/me", "name": "me", "description": "Get current user profile", "auth": "any"},
+      {"method": "POST", "path": "/api/v1/organizations", "name": "create_organization", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/organizations", "name": "list_organizations", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/organizations/{org_id}", "name": "get_organization", "auth": "any"},
+      {"method": "PATCH", "path": "/api/v1/organizations/{org_id}", "name": "update_organization", "auth": "any"},
+      {"method": "DELETE", "path": "/api/v1/organizations/{org_id}", "name": "delete_organization", "auth": "admin"},
+      {"method": "POST", "path": "/api/v1/applications", "name": "create_application", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/applications", "name": "list_applications", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/applications/{app_id}", "name": "get_application", "auth": "any"},
+      {"method": "PATCH", "path": "/api/v1/applications/{app_id}", "name": "update_application", "auth": "any"},
+      {"method": "POST", "path": "/api/v1/applications/{app_id}/sections", "name": "save_section", "auth": "any"},
+      {"method": "POST", "path": "/api/v1/applications/{app_id}/status", "name": "transition_status", "auth": "any"},
+      {"method": "POST", "path": "/api/v1/applications/{app_id}/decision", "name": "make_decision", "auth": "admin"},
+      {"method": "POST", "path": "/api/v1/applications/{app_id}/comments", "name": "add_comment", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/applications/{app_id}/comments", "name": "list_comments", "auth": "any"},
+      {"method": "POST", "path": "/api/v1/documents", "name": "upload_document", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/documents/{doc_id}", "name": "download_document", "auth": "any"},
+      {"method": "DELETE", "path": "/api/v1/documents/{doc_id}", "name": "delete_document", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/documents/application/{application_id}", "name": "list_documents", "auth": "any"},
+      {"method": "POST", "path": "/api/v1/reviews", "name": "create_review", "auth": "reviewer"},
+      {"method": "GET", "path": "/api/v1/reviews/{review_id}", "name": "get_review", "auth": "reviewer"},
+      {"method": "PATCH", "path": "/api/v1/reviews/{review_id}", "name": "update_review", "auth": "reviewer"},
+      {"method": "POST", "path": "/api/v1/reviews/{review_id}/complete", "name": "complete_review", "auth": "reviewer"},
+      {"method": "GET", "path": "/api/v1/reviews/application/{application_id}", "name": "list_reviews_for_application", "auth": "reviewer"},
+      {"method": "GET", "path": "/api/v1/reviews/reviewer/me", "name": "list_my_reviews", "auth": "reviewer"},
+      {"method": "POST", "path": "/api/v1/reports/generate", "name": "generate_report", "auth": "admin"},
+      {"method": "GET", "path": "/api/v1/vulnerability/scores", "name": "get_scores", "auth": "reviewer"},
+      {"method": "GET", "path": "/api/v1/vulnerability/heatmap", "name": "get_heatmap", "auth": "reviewer"},
+      {"method": "GET", "path": "/api/v1/vulnerability/compare", "name": "compare_regions", "auth": "reviewer"},
+      {"method": "GET", "path": "/api/v1/vulnerability/categories", "name": "list_categories", "auth": "reviewer"},
+      {"method": "GET", "path": "/api/v1/vulnerability/indicators", "name": "list_indicators", "auth": "reviewer"},
+      {"method": "POST", "path": "/api/v1/vulnerability/recalculate", "name": "recalculate_scores", "auth": "admin"},
+      {"method": "POST", "path": "/api/v1/ingestion/trigger", "name": "trigger_ingestion", "auth": "admin"},
+      {"method": "GET", "path": "/api/v1/ingestion/jobs/{job_id}", "name": "get_job_status", "auth": "admin"},
+      {"method": "GET", "path": "/api/v1/ingestion/jobs", "name": "list_jobs", "auth": "admin"},
+      {"method": "GET", "path": "/api/v1/geography/regions", "name": "list_regions", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/geography/regions/{region_id}", "name": "get_region", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/geography/regions/{region_id}/geojson", "name": "get_region_geojson", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/geography/geojson", "name": "get_all_geojson", "auth": "any"},
+      {"method": "GET", "path": "/api/v1/geography/municipalities", "name": "list_municipalities", "auth": "any"}
+    ]
+  },
+  "frontend": {
+    "entry_point": "src/main.ts",
+    "routes": [
+      {"path": "/", "name": "landing", "view": "LandingPage.vue", "layout": "DefaultLayout", "auth": false},
+      {"path": "/login", "name": "login", "view": "LoginPage.vue", "layout": "AuthLayout", "auth": false},
+      {"path": "/dashboard", "name": "applicant-dashboard", "view": "ApplicantDashboard.vue", "layout": "DefaultLayout", "auth": true, "roles": ["any"]},
+      {"path": "/applications/new", "name": "application-new", "view": "ApplicationForm.vue", "layout": "DefaultLayout", "auth": true, "roles": ["any"]},
+      {"path": "/applications/:id", "name": "application-detail", "view": "ApplicationDetail.vue", "layout": "DefaultLayout", "auth": true, "roles": ["any"]},
+      {"path": "/reviews", "name": "reviewer-dashboard", "view": "ReviewerDashboard.vue", "layout": "DefaultLayout", "auth": true, "roles": ["reviewer", "admin"]},
+      {"path": "/reviews/:appId", "name": "application-review", "view": "ApplicationReview.vue", "layout": "DefaultLayout", "auth": true, "roles": ["reviewer", "admin"]},
+      {"path": "/reviews/compare", "name": "application-compare", "view": "ApplicationCompare.vue", "layout": "DefaultLayout", "auth": true, "roles": ["reviewer", "admin"]},
+      {"path": "/vulnerability", "name": "heatmap", "view": "HeatmapView.vue", "layout": "DefaultLayout", "auth": true, "roles": ["reviewer", "admin"]},
+      {"path": "/vulnerability/compare", "name": "region-comparison", "view": "RegionComparison.vue", "layout": "DefaultLayout", "auth": true, "roles": ["reviewer", "admin"]},
+      {"path": "/vulnerability/indicators", "name": "indicator-explorer", "view": "IndicatorExplorer.vue", "layout": "DefaultLayout", "auth": true, "roles": ["reviewer", "admin"]},
+      {"path": "/vulnerability/data-sources", "name": "data-source-status", "view": "DataSourceStatus.vue", "layout": "DefaultLayout", "auth": true, "roles": ["admin"]},
+      {"path": "/reports", "name": "report-generator", "view": "ReportGenerator.vue", "layout": "DefaultLayout", "auth": true, "roles": ["admin"]},
+      {"path": "/admin", "name": "admin-dashboard", "view": "AdminDashboard.vue", "layout": "AdminLayout", "auth": true, "roles": ["admin"]},
+      {"path": "/admin/users", "name": "user-management", "view": "UserManagement.vue", "layout": "AdminLayout", "auth": true, "roles": ["admin"]},
+      {"path": "/admin/config", "name": "system-config", "view": "SystemConfig.vue", "layout": "AdminLayout", "auth": true, "roles": ["admin"]}
+    ],
+    "stores": ["auth", "applications", "organizations", "reviews", "vulnerability", "geography", "notifications"],
+    "services": ["api", "auth.service", "applications.service", "organizations.service", "reviews.service", "vulnerability.service", "geography.service", "reports.service"],
+    "layouts": ["DefaultLayout.vue", "AuthLayout.vue", "AdminLayout.vue"],
+    "composables": ["useAuth", "usePagination"]
+  },
+  "database": {
+    "engine": "PostgreSQL 12+",
+    "name": "cfs_portal",
+    "tables": [
+      {"name": "users", "description": "User accounts linked to Azure AD"},
+      {"name": "user_sessions", "description": "JWT refresh token sessions"},
+      {"name": "organizations", "description": "Shelter organizations (soft delete)"},
+      {"name": "funding_applications", "description": "Funding application records with status workflow"},
+      {"name": "application_sections", "description": "Multi-step form section data (JSONB)"},
+      {"name": "application_status_history", "description": "Status transition audit trail"},
+      {"name": "application_comments", "description": "Internal and external comments on applications"},
+      {"name": "documents", "description": "Uploaded document metadata (files in Azure Blob)"},
+      {"name": "reviews", "description": "Reviewer assessments of applications"},
+      {"name": "review_scores", "description": "Individual scoring criteria per review"},
+      {"name": "regions", "description": "Alberta geographic regions with GeoJSON boundaries"},
+      {"name": "municipalities", "description": "Municipalities within regions"},
+      {"name": "indicator_categories", "description": "6 SVI categories: socioeconomic, demographic, health, housing, infrastructure, environmental"},
+      {"name": "indicators", "description": "Individual vulnerability indicators within categories"},
+      {"name": "data_sources", "description": "External data source configurations"},
+      {"name": "indicator_values", "description": "Raw and normalized indicator values per region per year"},
+      {"name": "svi_scores", "description": "Computed composite SVI scores with KPMG grades"},
+      {"name": "ingestion_jobs", "description": "Data ingestion pipeline job tracking"},
+      {"name": "audit_log", "description": "System-wide audit trail"}
+    ],
+    "seed_data": {
+      "regions": 24,
+      "indicator_categories": 6,
+      "indicators": 48,
+      "data_sources": 7,
+      "indicator_values": 2736,
+      "svi_scores": 57
+    },
+    "migrations": [
+      {"id": "001_initial_schema", "description": "All tables, indexes, and foreign keys"},
+      {"id": "002_seed_svi_catalog", "description": "Seed regions, categories, indicators, data sources"},
+      {"id": "003_seed_test_data", "description": "Synthetic indicator values and pre-computed SVI scores"}
+    ]
+  },
+  "environment_variables": {
+    "application": {
+      "APP_NAME": {"type": "string", "default": "CFS Funding Portal"},
+      "ENVIRONMENT": {"type": "string", "default": "development"},
+      "DEBUG": {"type": "boolean", "default": false},
+      "ALLOWED_ORIGINS": {"type": "list[string]", "default": ["http://localhost:5173"]}
+    },
+    "database": {
+      "DATABASE_URL": {"type": "string", "default": "postgresql+asyncpg://postgres:postgres@localhost:5432/cfs_portal"},
+      "DATABASE_PASSWORD": {"type": "string", "default": ""},
+      "DATABASE_POOL_SIZE": {"type": "integer", "default": 20},
+      "DATABASE_MAX_OVERFLOW": {"type": "integer", "default": 10}
+    },
+    "azure_ad": {
+      "AZURE_TENANT_ID": {"type": "string", "required": true},
+      "AZURE_CLIENT_ID": {"type": "string", "required": true},
+      "AZURE_CLIENT_SECRET": {"type": "string", "required": true, "sensitive": true},
+      "AZURE_REDIRECT_URI": {"type": "string", "default": "http://localhost:8000/api/v1/auth/callback"}
+    },
+    "jwt": {
+      "JWT_SECRET_KEY": {"type": "string", "required": true, "sensitive": true},
+      "JWT_ALGORITHM": {"type": "string", "default": "HS256"},
+      "JWT_ACCESS_TOKEN_EXPIRE_MINUTES": {"type": "integer", "default": 30},
+      "JWT_REFRESH_TOKEN_EXPIRE_MINUTES": {"type": "integer", "default": 1440}
+    },
+    "azure_storage": {
+      "AZURE_STORAGE_CONNECTION_STRING": {"type": "string", "required": true, "sensitive": true},
+      "AZURE_STORAGE_CONTAINER": {"type": "string", "default": "documents"}
+    },
+    "redis": {
+      "REDIS_URL": {"type": "string", "default": "redis://localhost:6379/0"}
+    },
+    "logging": {
+      "LOG_LEVEL": {"type": "string", "default": "INFO"},
+      "LOG_FORMAT": {"type": "string", "default": "json", "options": ["json", "console"]}
+    },
+    "rate_limiting": {
+      "RATE_LIMIT_PER_MINUTE": {"type": "integer", "default": 60}
+    }
+  },
+  "infrastructure": {
+    "docker_compose_services": ["postgresql:16-alpine", "redis:7-alpine", "mcr.microsoft.com/azure-storage/azurite"],
+    "health_probes": {
+      "liveness": "/health/live",
+      "readiness": "/health/ready",
+      "startup": "/health/startup"
+    },
+    "monitoring": {
+      "metrics_endpoint": "/metrics",
+      "structured_logging": true,
+      "correlation_ids": true
+    },
+    "security": {
+      "authentication": "Azure AD via MSAL + application JWTs",
+      "authorization": "Role-based (applicant, reviewer, admin)",
+      "rate_limiting": true,
+      "cors": true,
+      "soft_deletes": true,
+      "audit_logging": true
+    }
+  },
+  "accessibility": {
+    "standard": "WCAG 2.2 AA",
+    "design_system": "Government of Alberta Design System",
+    "requirements": ["Keyboard navigation", "ARIA labels", "Color contrast", "Focus management"]
+  }
+}
