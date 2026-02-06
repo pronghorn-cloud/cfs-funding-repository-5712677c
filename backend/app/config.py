@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/cfs_portal"
+    database_password: str = ""
     database_pool_size: int = 20
     database_max_overflow: int = 10
     database_echo: bool = False
