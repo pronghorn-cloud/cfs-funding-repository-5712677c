@@ -52,6 +52,11 @@ const router = createRouter({
           component: () => import('@/views/applicant/ApplicationForm.vue'),
         },
         {
+          path: 'review',
+          name: 'application-review-submit',
+          component: () => import('@/views/applicant/ApplicationReviewSubmit.vue'),
+        },
+        {
           path: ':id',
           name: 'application-detail',
           component: () => import('@/views/applicant/ApplicationDetail.vue'),

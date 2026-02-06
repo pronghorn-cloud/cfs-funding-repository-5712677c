@@ -37,6 +37,20 @@ goa-spinner {
   display: block;
 }
 
+/* GoA App Header: align heading text with bottom of Alberta signature period */
+goa-app-header::part(heading) {
+  align-self: flex-end;
+  margin-left: 8px;
+  line-height: 1;
+}
+
+/* GoA form labels: distinguish from user-entered text */
+goa-form-item::part(label) {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #333333;
+}
+
 /* Focus styles for WCAG 2.2 AA */
 *:focus-visible {
   outline: 3px solid var(--goa-color-interactive);
